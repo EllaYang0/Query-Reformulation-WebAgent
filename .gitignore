@@ -1,0 +1,7 @@
+.env
+*.dataless.bak
+.git.dataless.bak/
+.DS_Store
+__pycache__/
+*.pyc
+results/
