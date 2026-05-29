@@ -52,6 +52,8 @@ locally; the `results/` directory is intentionally ignored by Git.
 ├── agent.py                  # CLI for running one question interactively
 ├── eval.py                   # Batch evaluation runner
 ├── requirements.txt          # Python dependencies
+├── scripts/
+│   └── summarize_results.py  # Convert saved eval JSON to Markdown tables
 ├── src/
 │   ├── baseline.py           # Single-query baseline agent
 │   ├── restart.py            # RE-TRAC-style trajectory-compression agent
@@ -228,3 +230,13 @@ results/
 
 The `results/` directory is ignored by Git because outputs can be large and may
 vary between runs due to live web search results.
+
+Summarize a saved result file as Markdown:
+
+```bash
+python scripts/summarize_results.py results/hotpot_1780028038.json
+```
+
+The summary includes aggregate metrics, valid-only accuracy, tool-error counts,
+pairwise wins between RE-TRAC-style recovery and reformulation, and per-question
+outcomes.
