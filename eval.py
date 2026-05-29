@@ -34,6 +34,23 @@ def grade_answer(question, correct_answer, response):
         return {"correct": False, "extracted": "None", "reasoning": f"Grading error: {e}"}
 
 
+def is_tool_error(message):
+    msg = str(message).lower()
+    markers = [
+        "connectionpool",
+        "max retries exceeded",
+        "nodename nor servname",
+        "connecttimeout",
+        "read timed out",
+        "connection aborted",
+        "remote disconnected",
+        "temporarily unavailable",
+        "name resolution",
+        "failed to establish a new connection",
+    ]
+    return any(marker in msg for marker in markers)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluation Runner")
     parser.add_argument("--n", type=int, default=10)
@@ -85,7 +102,7 @@ def main():
                 print(f"  📊 {'✓ CORRECT' if grade['correct'] else '✗ WRONG'} (extracted: \"{grade['extracted']}\")")
             except Exception as e:
                 print(f"  ❌ Baseline error: {e}")
-                entry["baseline"] = {"error": str(e), "grade": {"correct": False}}
+                entry["baseline"] = {"error": str(e), "tool_error": is_tool_error(e), "grade": {"correct": False}}
             finally:
                 agent.close()
 
@@ -99,7 +116,7 @@ def main():
                 print(f"  📊 {'✓ CORRECT' if grade['correct'] else '✗ WRONG'} (extracted: \"{grade['extracted']}\")")
             except Exception as e:
                 print(f"  ❌ RE-TRAC error: {e}")
-                entry["restart"] = {"error": str(e), "grade": {"correct": False}}
+                entry["restart"] = {"error": str(e), "tool_error": is_tool_error(e), "grade": {"correct": False}}
             finally:
                 agent.close()
 
@@ -113,7 +130,7 @@ def main():
                 print(f"  📊 {'✓ CORRECT' if grade['correct'] else '✗ WRONG'} (extracted: \"{grade['extracted']}\")")
             except Exception as e:
                 print(f"  ❌ Reform error: {e}")
-                entry["reform"] = {"error": str(e), "grade": {"correct": False}}
+                entry["reform"] = {"error": str(e), "tool_error": is_tool_error(e), "grade": {"correct": False}}
             finally:
                 agent.close()
 
@@ -134,24 +151,28 @@ def summarize(args, all_results):
         if not vals:
             continue
         correct = sum(1 for v in vals if v.get("grade", {}).get("correct"))
-        valid = [v for v in vals if "elapsed_sec" in v]
+        tool_errors = sum(1 for v in vals if v.get("tool_error"))
+        answered = [v for v in vals if not v.get("error") and "elapsed_sec" in v]
+        answered_correct = sum(1 for v in answered if v.get("grade", {}).get("correct"))
         print(f"  {label}:")
-        print(f"    Accuracy:    {correct}/{n} ({correct/n*100:.1f}%)")
-        print(f"    Avg time:    {sum(v.get('elapsed_sec', 0) for v in valid)/max(len(valid),1):.1f}s")
-        print(f"    Avg steps:   {sum(v.get('total_steps', 0) for v in valid)/max(len(valid),1):.1f}")
-        print(f"    Avg pages:   {sum(v.get('pages_fetched', 0) for v in valid)/max(len(valid),1):.1f}")
+        print(f"    Accuracy all:   {correct}/{n} ({correct/n*100:.1f}%)")
+        print(f"    Accuracy valid: {answered_correct}/{len(answered)} ({answered_correct/max(len(answered),1)*100:.1f}%)")
+        print(f"    Tool errors:    {tool_errors}/{len(vals)}")
+        print(f"    Avg time:       {sum(v.get('elapsed_sec', 0) for v in answered)/max(len(answered),1):.1f}s")
+        print(f"    Avg steps:      {sum(v.get('total_steps', 0) for v in answered)/max(len(answered),1):.1f}")
+        print(f"    Avg pages:      {sum(v.get('pages_fetched', 0) for v in answered)/max(len(answered),1):.1f}")
         if extra_name:
             field = "restarts" if key == "restart" else "reformulations"
             total = sum(v.get(field, 0) for v in vals)
-            print(f"    {extra_name}: {total} total ({total/max(len(valid),1):.1f} avg)")
+            print(f"    {extra_name}: {total} total ({total/max(len(answered),1):.1f} avg)")
         print()
 
     if args.compare_recovery:
         print(f"  {'#':<4} {'RE-TRAC':<12} {'Reform':<12} {'Rounds+':<9} {'Reform#':<8} Question")
         print(f"  {'─' * 85}")
         for i, r in enumerate(all_results):
-            st = "✓" if r["restart"] and r["restart"].get("grade", {}).get("correct") else "✗"
-            rf = "✓" if r["reform"] and r["reform"].get("grade", {}).get("correct") else "✗"
+            st = status_symbol(r.get("restart"))
+            rf = status_symbol(r.get("reform"))
             print(f"  {i+1:<4} {st:<12} {rf:<12} {str((r['restart'] or {}).get('restarts', '?')):<9} {str((r['reform'] or {}).get('reformulations', '?')):<8} {r['question'][:38]}...")
 
     Path("results").mkdir(exist_ok=True)
@@ -159,6 +180,16 @@ def summarize(args, all_results):
     with open(fname, "w") as f:
         json.dump({"benchmark": args.benchmark, "n": n, "results": all_results}, f, indent=2, default=str)
     print(f"\n  💾 Results saved to {fname}\n")
+
+
+def status_symbol(result):
+    if not result:
+        return "-"
+    if result.get("tool_error"):
+        return "⚠"
+    if result.get("error"):
+        return "!"
+    return "✓" if result.get("grade", {}).get("correct") else "✗"
 
 
 if __name__ == "__main__":

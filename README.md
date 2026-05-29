@@ -33,16 +33,17 @@ Main features:
 - Evaluation on HotpotQA hard bridge questions and BrowseComp.
 - CI workflow for syntax checks and smoke tests.
 
-Latest HotpotQA hard bridge result, using 10 questions with seed 42:
+Latest clean HotpotQA hard bridge result, using 30 questions with seed 42:
 
-| Agent | Accuracy | Avg Time | Avg Steps | Avg Pages |
-| --- | ---: | ---: | ---: | ---: |
-| RE-TRAC-style recovery | 7/10 | 23.7s | 19.8 | 7.8 |
-| Mid-trajectory reformulation | 7/10 | 9.9s | 8.6 | 3.1 |
+| Agent | Accuracy | Tool Errors | Avg Time | Avg Steps | Avg Pages |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| RE-TRAC-style recovery | 17/30 | 0/30 | 55.0s | 19.3 | 7.3 |
+| Mid-trajectory reformulation | 20/30 | 0/30 | 27.1s | 10.2 | 3.1 |
 
-The current result suggests that early query correction can match the accuracy
-of full trajectory recovery while using fewer steps, less time, and fewer page
-fetches.
+The current result suggests that early query correction can improve accuracy
+over full trajectory recovery while using fewer steps, less time, and fewer page
+fetches. The saved run for this result is `results/hotpot_1780028038.json`
+locally; the `results/` directory is intentionally ignored by Git.
 
 ## Repository Organization
 
@@ -196,7 +197,7 @@ python agent.py --compare-recovery "At what theater is the composer and lyricist
 HotpotQA hard bridge questions:
 
 ```bash
-python eval.py --benchmark hotpot --n 10 --seed 42 --compare-recovery
+python eval.py --benchmark hotpot --n 30 --seed 42 --compare-recovery
 ```
 
 BrowseComp:
@@ -208,9 +209,9 @@ python eval.py --benchmark browsecomp --n 5 --seed 42 --compare-recovery
 Run only one agent type:
 
 ```bash
-python eval.py --benchmark hotpot --n 10 --baseline-only
-python eval.py --benchmark hotpot --n 10 --restart-only
-python eval.py --benchmark hotpot --n 10 --reform-only
+python eval.py --benchmark hotpot --n 10 --seed 42 --baseline-only
+python eval.py --benchmark hotpot --n 10 --seed 42 --restart-only
+python eval.py --benchmark hotpot --n 10 --seed 42 --reform-only
 ```
 
 Show the browser window instead of running headless:

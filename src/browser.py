@@ -3,6 +3,7 @@ browser.py - Search with Serper and fetch pages with Playwright.
 """
 
 from playwright.sync_api import sync_playwright
+import time
 
 
 class Browser:
@@ -31,10 +32,16 @@ class Browser:
         return self
 
     def close(self):
-        if self.browser:
-            self.browser.close()
-        if self.pw:
-            self.pw.stop()
+        try:
+            if self.browser:
+                self.browser.close()
+        except Exception:
+            pass
+        try:
+            if self.pw:
+                self.pw.stop()
+        except Exception:
+            pass
 
     def search(self, query):
         import os
@@ -44,12 +51,23 @@ class Browser:
         if not key:
             raise ValueError("SERPER_API_KEY not set.")
 
-        resp = requests.post(
-            "https://google.serper.dev/search",
-            headers={"X-API-KEY": key, "Content-Type": "application/json"},
-            json={"q": query, "num": 10},
-            timeout=15,
-        )
+        for attempt in range(4):
+            try:
+                resp = requests.post(
+                    "https://google.serper.dev/search",
+                    headers={"X-API-KEY": key, "Content-Type": "application/json"},
+                    json={"q": query, "num": 10},
+                    timeout=20,
+                )
+                break
+            except requests.RequestException as e:
+                if attempt < 3:
+                    wait = 2 ** attempt * 3
+                    print(f"    ⏳ Search connection failed, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+                raise
+
         if resp.status_code != 200:
             print(f"    ⚠ Serper API error ({resp.status_code}): {resp.text[:200]}")
             return {"query": query, "results": []}
