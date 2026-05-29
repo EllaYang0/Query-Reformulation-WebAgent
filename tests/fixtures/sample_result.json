@@ -1,0 +1,52 @@
+{
+  "benchmark": "hotpot",
+  "n": 2,
+  "results": [
+    {
+      "question": "Question one?",
+      "correct_answer": "Answer one",
+      "type": "bridge",
+      "level": "hard",
+      "baseline": null,
+      "restart": {
+        "answer": "Answer one",
+        "elapsed_sec": 10.0,
+        "total_steps": 18,
+        "pages_fetched": 6,
+        "restarts": 2,
+        "grade": {"correct": true}
+      },
+      "reform": {
+        "answer": "Answer one",
+        "elapsed_sec": 5.0,
+        "total_steps": 8,
+        "pages_fetched": 3,
+        "reformulations": 1,
+        "grade": {"correct": true}
+      }
+    },
+    {
+      "question": "Question two?",
+      "correct_answer": "Answer two",
+      "type": "bridge",
+      "level": "hard",
+      "baseline": null,
+      "restart": {
+        "answer": "Wrong",
+        "elapsed_sec": 12.0,
+        "total_steps": 20,
+        "pages_fetched": 7,
+        "restarts": 2,
+        "grade": {"correct": false}
+      },
+      "reform": {
+        "answer": "Answer two",
+        "elapsed_sec": 6.0,
+        "total_steps": 9,
+        "pages_fetched": 3,
+        "reformulations": 2,
+        "grade": {"correct": true}
+      }
+    }
+  ]
+}
