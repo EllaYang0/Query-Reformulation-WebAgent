@@ -53,7 +53,8 @@ locally; the `results/` directory is intentionally ignored by Git.
 ├── eval.py                   # Batch evaluation runner
 ├── requirements.txt          # Python dependencies
 ├── docs/
-│   └── pipeline.md           # Diagrams and explanation of agent pipelines
+│   ├── pipeline.md           # Diagrams and explanation of agent pipelines
+│   └── final_report_notes.md # Limitations and presentation talking points
 ├── scripts/
 │   └── summarize_results.py  # Convert saved eval JSON to Markdown tables
 ├── src/
@@ -87,6 +88,8 @@ The code is organized around agent implementations in `src/`:
 average runtime, average steps, pages fetched, restarts, and reformulations.
 See `docs/pipeline.md` for diagrams comparing the RE-TRAC-style restart
 pipeline with the mid-trajectory reformulation pipeline.
+See `docs/final_report_notes.md` for limitations, interpretation of the
+results, and suggested final presentation talking points.
 
 ## Build / Installation Instructions
 
